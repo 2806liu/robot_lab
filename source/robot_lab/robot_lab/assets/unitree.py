@@ -5,6 +5,10 @@
 Reference: https://github.com/unitreerobotics/unitree_ros
 """
 
+# 中文学习提示：本文件定义 Unitree 机器人的仿真资产。
+# 重点包括：URDF/USD 路径、初始姿态、关节限制，以及电机的力矩、速度、
+# 刚度、阻尼和转动惯量。修改 G1 的动力学参数时，重点查看
+# UNITREE_G1_29DOF_CFG；奖励函数和 PPO 算法不在此文件中。
 import isaaclab.sim as sim_utils
 from isaaclab.actuators import DCMotorCfg, ImplicitActuatorCfg
 from isaaclab.assets.articulation import ArticulationCfg
@@ -154,6 +158,8 @@ UNITREE_GO2W_CFG = ArticulationCfg(
         joint_vel={".*": 0.0},
     ),
     soft_joint_pos_limit_factor=0.9,
+    # 中文说明：actuators 的键名是执行器分组名，joint_names_expr 用正则表达式
+    # 选择该组关节；effort/velocity 是仿真上限，stiffness/damping 决定位置控制响应。
     actuators={
         "legs": ImplicitActuatorCfg(
             joint_names_expr=["^(?!.*_foot_joint).*"],
@@ -323,6 +329,10 @@ UNITREE_B2W_CFG = ArticulationCfg(
 """
 
 
+# 中文说明：G1 29 自由度资产配置。spawn 指定 URDF 及物理属性，
+# init_state 指定机器人出生时的站立姿态，actuators 把关节分组并配置
+# 力矩上限、速度上限、刚度、阻尼和 armature。跑步实验首先要检查这些
+# 限制是否符合真实 G1，否则策略可能学到仿真中无法落地的动作。
 # UNITREE_G1_29DOF_CFG = ArticulationCfg(
 #     spawn=sim_utils.UrdfFileCfg(
 #         fix_base=False,
@@ -445,6 +455,9 @@ UNITREE_B2W_CFG = ArticulationCfg(
 # )
 
 
+# 中文说明：下面这些 ARMATURE/STIFFNESS/DAMPING 常量用于根据电机转动惯量、
+# 固有频率和阻尼比估算关节执行器参数。它们影响仿真中的“电机有多硬、
+# 响应有多快”，不要在没有验证真实电机规格时随意放大。
 ARMATURE_5020 = 0.003609725
 ARMATURE_7520_14 = 0.010177520
 ARMATURE_7520_22 = 0.025101925
@@ -463,6 +476,8 @@ DAMPING_7520_14 = 2.0 * DAMPING_RATIO * ARMATURE_7520_14 * NATURAL_FREQ
 DAMPING_7520_22 = 2.0 * DAMPING_RATIO * ARMATURE_7520_22 * NATURAL_FREQ
 DAMPING_4010 = 2.0 * DAMPING_RATIO * ARMATURE_4010 * NATURAL_FREQ
 
+# 中文说明：下面是实际生效的 G1 29 自由度配置。上方同名代码块是历史参数参考，
+# 仍被注释；请以这里的 URDF、初始姿态和执行器分组为准。
 UNITREE_G1_29DOF_CFG = ArticulationCfg(
     spawn=sim_utils.UrdfFileCfg(
         fix_base=False,

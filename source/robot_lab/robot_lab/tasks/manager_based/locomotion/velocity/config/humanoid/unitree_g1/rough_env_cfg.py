@@ -1,6 +1,10 @@
 # Copyright (c) 2024-2026 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 
+
+# 中文学习提示：这是 Unitree G1 崎岖地形速度跟踪任务。
+# 相比 Flat，这里会涉及地形生成、地形课程和扰动随机化。初学时先确认
+# Flat 任务稳定，再研究本文件中的地形和随机化配置。
 from isaaclab.utils import configclass
 
 import robot_lab.tasks.manager_based.locomotion.velocity.mdp as mdp
@@ -13,6 +17,8 @@ from robot_lab.assets.unitree import UNITREE_G1_29DOF_ACTION_SCALE, UNITREE_G1_2
 
 
 @configclass
+# 中文说明：该类是 G1 的任务专用覆盖层。父类提供通用 MDP，
+# 本类替换 G1 资产、身体名称、观测缩放、动作缩放、奖励、随机化和命令范围。
 class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
     base_link_name = "torso_link"
     foot_link_name = ".*_ankle_roll_link"
@@ -48,11 +54,14 @@ class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         # post init of parent
         super().__post_init__()
 
+        # 中文说明：Scene 把通用场景中的机器人替换成 G1，并把高度扫描器
+        # 绑定到 torso_link。所有 body/link 名称必须与 URDF 名称一致。
         # ------------------------------Sence------------------------------
         self.scene.robot = UNITREE_G1_29DOF_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         self.scene.height_scanner.prim_path = "{ENV_REGEX_NS}/Robot/" + self.base_link_name
         self.scene.height_scanner_base.prim_path = "{ENV_REGEX_NS}/Robot/" + self.base_link_name
 
+        # 中文说明：观测是策略输入；scale 用于数值归一化，把项设为 None 会移除该观测。
         # ------------------------------Observations------------------------------
         self.observations.policy.base_lin_vel.scale = 2.0
         self.observations.policy.base_ang_vel.scale = 0.25
@@ -63,6 +72,8 @@ class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         # self.observations.policy.joint_pos.params["asset_cfg"].joint_names = self.joint_names
         # self.observations.policy.joint_vel.params["asset_cfg"].joint_names = self.joint_names
 
+        # 中文说明：策略输出先经过关节位置动作项，再乘 action scale，成为关节目标偏移。
+        # 跑步时动作幅度过大容易造成冲击和摔倒。
         # ------------------------------Actions------------------------------
         # reduce action scale
         # self.actions.joint_pos.scale = 0.25
@@ -70,6 +81,8 @@ class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         self.actions.joint_pos.clip = {".*": (-100.0, 100.0)}
         # self.actions.joint_pos.joint_names = self.joint_names
 
+        # 中文说明：Events 是域随机化。startup 在创建环境时执行，reset 每回合执行。
+        # 调试新奖励时可先缩小随机范围，确认基线后再恢复以提高 sim-to-real 鲁棒性。
         # ------------------------------Events------------------------------
         self.events.randomize_rigid_body_mass_base.params["asset_cfg"].body_names = [self.base_link_name]
         self.events.randomize_rigid_body_mass_others.params["asset_cfg"].body_names = [
@@ -78,6 +91,8 @@ class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         self.events.randomize_com_positions.params["asset_cfg"].body_names = [self.base_link_name]
         self.events.randomize_apply_external_force_torque.params["asset_cfg"].body_names = [self.base_link_name]
 
+        # 中文说明：速度跟踪是主目标；姿态、动作变化、力矩、关节限制、脚滑和接触项
+        # 约束运动质量。改跑步时重点检查 feet_air_time、feet_slide、速度跟踪和终止惩罚。
         # ------------------------------Rewards------------------------------
         # General
         self.rewards.is_terminated.weight = -200.0
@@ -152,15 +167,21 @@ class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         if self.__class__.__name__ == "UnitreeG1RoughEnvCfg":
             self.disable_zero_weight_rewards()
 
+        # 中文说明：定义摔倒或其他失败何时结束回合。illegal_contact 通常用躯干碰地判断摔倒。
+        # 终止过早会学不会，终止过晚会让策略持续积累无效数据。
         # ------------------------------Terminations------------------------------
         self.terminations.illegal_contact.params["sensor_cfg"].body_names = [self.base_link_name]
 
+        # 中文说明：课程学习逐步增加地形或命令难度；当前命令课程被关闭，
+        # 因此速度直接使用下面的固定范围。跑步实验可逐步恢复课程。
         # ------------------------------Curriculums------------------------------
         # self.curriculum.command_levels_lin_vel.params["range_multiplier"] = (0.2, 1.0)
         # self.curriculum.command_levels_ang_vel.params["range_multiplier"] = (0.2, 1.0)
         self.curriculum.command_levels_lin_vel = None
         self.curriculum.command_levels_ang_vel = None
 
+        # 中文说明：lin_vel_x 是前后速度，lin_vel_y 是侧向速度，ang_vel_z 是旋转速度。
+        # 初次改跑步建议只扩大 lin_vel_x，减少同时改变的变量。
         # ------------------------------Commands------------------------------
         self.commands.base_velocity.ranges.lin_vel_x = (-1.0, 1.0)
         self.commands.base_velocity.ranges.lin_vel_y = (-1.0, 1.0)

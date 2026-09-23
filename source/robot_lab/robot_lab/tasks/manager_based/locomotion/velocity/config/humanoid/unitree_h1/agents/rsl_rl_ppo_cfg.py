@@ -1,6 +1,10 @@
 # Copyright (c) 2024-2026 Ziqi Fan
 # SPDX-License-Identifier: Apache-2.0
 
+
+# 中文学习提示：这是 H1 的 RSL-RL PPO 超参数配置，也可用来理解 G1 的
+# PPO 配置结构。policy 定义 actor/critic 网络，algorithm 定义 PPO 更新，
+# rollout、batch、learning_rate 和 max_iterations 影响显存、训练速度和收敛。
 from isaaclab.utils import configclass
 
 from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlPpoActorCriticCfg, RslRlPpoAlgorithmCfg

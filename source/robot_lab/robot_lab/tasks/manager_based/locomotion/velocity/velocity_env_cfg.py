@@ -6,6 +6,11 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+# 中文学习提示：这是速度运动任务共用的基础配置。
+# Commands 产生目标速度，Observations 组成策略输入，Actions 把策略输出
+# 映射到关节，Rewards 评价动作，Events 做随机化，Terminations 判断摔倒
+# 或超时。把走路改成跑步时，通常首先研究 Commands、Rewards 和 Terminations。
+
 import math
 from dataclasses import MISSING
 
@@ -40,6 +45,8 @@ from isaaclab.terrains.config.rough import ROUGH_TERRAINS_CFG  # isort: skip
 
 
 @configclass
+# 中文说明：Scene 定义仿真世界。地形、机器人、扫描器和接触传感器在这里创建，
+# 后续观测和奖励通过 SceneEntityCfg 的名称读取这些对象。
 class MySceneCfg(InteractiveSceneCfg):
     """Configuration for the terrain scene with a legged robot."""
 
@@ -100,6 +107,8 @@ class MySceneCfg(InteractiveSceneCfg):
 
 
 @configclass
+# 中文说明：Commands 生成策略需要跟踪的目标速度，并按设定时间重新采样。
+# rel_standing_envs 保留少量原地站立样本，有助于避免策略只会向前冲。
 class CommandsCfg:
     """Command specifications for the MDP."""
 
@@ -118,6 +127,8 @@ class CommandsCfg:
 
 
 @configclass
+# 中文说明：Actions 定义策略输出如何作用到机器人。这里使用关节位置控制，
+# scale 决定动作幅值，default offset 表示以机器人默认姿态为基准。
 class ActionsCfg:
     """Action specifications for the MDP."""
 
@@ -127,6 +138,8 @@ class ActionsCfg:
 
 
 @configclass
+# 中文说明：policy 是 actor 实际看到的输入，通常带噪声；critic 可以看到更完整的
+# 无噪声信息辅助训练。这种 actor/critic 信息不完全相同的方式称为 asymmetric critic。
 class ObservationsCfg:
     """Observation specifications for the MDP."""
 
@@ -255,6 +268,8 @@ class ObservationsCfg:
 
 
 @configclass
+# 中文说明：EventCfg 定义启动和 reset 时的随机事件。随机化范围过大可能导致初期
+# 无法站立，建议先用小范围复现基线，再逐步增加扰动和参数随机化。
 class EventCfg:
     """Configuration for events."""
 
@@ -372,6 +387,8 @@ class EventCfg:
 
 
 @configclass
+# 中文说明：每个 RewTerm 都由计算函数和 weight 组成；正权重鼓励行为，负权重惩罚行为，
+# weight=0 的项通常会被禁用。改跑步时应单独观察各项奖励，避免总 reward 掩盖问题。
 class RewardsCfg:
     """Reward terms for the MDP."""
 
@@ -645,6 +662,8 @@ class RewardsCfg:
 
 
 @configclass
+# 中文说明：Terminations 定义摔倒、越界和超时。time_out=True 表示正常超时结束，
+# illegal_contact 通常表示身体非允许部位接触地面。
 class TerminationsCfg:
     """Termination terms for the MDP."""
 
@@ -665,6 +684,8 @@ class TerminationsCfg:
 
 
 @configclass
+# 中文说明：Curriculum 逐步提高地形或命令难度。调试奖励时可先关闭课程保持固定难度，
+# 确认稳定后再打开课程测试泛化能力。
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
@@ -693,6 +714,8 @@ class CurriculumCfg:
 
 
 @configclass
+# 中文说明：这是最终组合配置，把 Scene、Commands、Actions、Observations、Events、
+# Rewards、Terminations 和 Curriculum 组装成 ManagerBasedRLEnv。G1 rough 配置继承它。
 class LocomotionVelocityRoughEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the locomotion velocity-tracking environment."""
 
