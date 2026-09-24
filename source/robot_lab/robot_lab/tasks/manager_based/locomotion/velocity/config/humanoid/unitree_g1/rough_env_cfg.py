@@ -160,8 +160,7 @@ class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         # self.curriculum.command_levels_ang_vel.params["range_multiplier"] = (0.2, 1.0)
         self.curriculum.command_levels_lin_vel = None
         self.curriculum.command_levels_ang_vel = None
-
         # ------------------------------Commands------------------------------
-       self.commands.base_velocity.ranges.lin_vel_x = (-0.8, 0.8)
-       self.commands.base_velocity.ranges.lin_vel_y = (-0.3, 0.3)
-       self.commands.base_velocity.ranges.ang_vel_z = (-0.3, 0.3)	
+        self.commands.base_velocity.ranges.lin_vel_x = (-0.8, 0.8)
+        self.commands.base_velocity.ranges.lin_vel_y = (-0.3, 0.3)
+        self.commands.base_velocity.ranges.ang_vel_z = (-0.3, 0.3)
