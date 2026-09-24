@@ -17,11 +17,13 @@ from robot_lab.assets.unitree import UNITREE_G1_29DOF_ACTION_SCALE, UNITREE_G1_2
 
 
 @configclass
-# 中文说明：该类是 G1 的任务专用覆盖层。父类提供通用 MDP，
+# 中文说明：该类是 G1 的任务专用覆盖层。父类提供通用 MDP
+# LocomotionVelocityRoughEnvCfg（通用模板，父类）
 # 本类替换 G1 资产、身体名称、观测缩放、动作缩放、奖励、随机化和命令范围。
+
 class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
-    base_link_name = "torso_link"
-    foot_link_name = ".*_ankle_roll_link"
+    base_link_name = "torso_link"           #躯干链接名，用于判断摔倒、施加外力、高度扫描
+    foot_link_name = ".*_ankle_roll_link"   #脚链接名（正则匹配），用于接触检测、抬脚奖励
     # fmt: off
     # joint_names = [
     #     "left_hip_pitch_joint",          # 0  L_LEG_HIP_PITCH
@@ -57,9 +59,9 @@ class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         # 中文说明：Scene 把通用场景中的机器人替换成 G1，并把高度扫描器
         # 绑定到 torso_link。所有 body/link 名称必须与 URDF 名称一致。
         # ------------------------------Sence------------------------------
-        self.scene.robot = UNITREE_G1_29DOF_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = UNITREE_G1_29DOF_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")#把通用配置里的占位机器人换成 G1
         self.scene.height_scanner.prim_path = "{ENV_REGEX_NS}/Robot/" + self.base_link_name
-        self.scene.height_scanner_base.prim_path = "{ENV_REGEX_NS}/Robot/" + self.base_link_name
+        self.scene.height_scanner_base.prim_path = "{ENV_REGEX_NS}/Robot/" + self.base_link_name#扫描器装在躯干上，检测脚下地形
 
         # 中文说明：观测是策略输入；scale 用于数值归一化，把项设为 None 会移除该观测。
         # ------------------------------Observations------------------------------
@@ -77,8 +79,8 @@ class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         # ------------------------------Actions------------------------------
         # reduce action scale
         # self.actions.joint_pos.scale = 0.25
-        self.actions.joint_pos.scale = UNITREE_G1_29DOF_ACTION_SCALE
-        self.actions.joint_pos.clip = {".*": (-100.0, 100.0)}
+        self.actions.joint_pos.scale = UNITREE_G1_29DOF_ACTION_SCALE    #动作缩放，决定策略输出到关节目标偏移的幅度
+        self.actions.joint_pos.clip = {".*": (-100.0, 100.0)}           #动作裁剪，防止输出过大
         # self.actions.joint_pos.joint_names = self.joint_names
 
         # 中文说明：Events 是域随机化。startup 在创建环境时执行，reset 每回合执行。
@@ -170,6 +172,8 @@ class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         # 中文说明：定义摔倒或其他失败何时结束回合。illegal_contact 通常用躯干碰地判断摔倒。
         # 终止过早会学不会，终止过晚会让策略持续积累无效数据。
         # ------------------------------Terminations------------------------------
+        #摔倒判定
+        #如果躯干（torso_link）接触到地面，判定为摔倒，终止 episode。
         self.terminations.illegal_contact.params["sensor_cfg"].body_names = [self.base_link_name]
 
         # 中文说明：课程学习逐步增加地形或命令难度；当前命令课程被关闭，
@@ -183,6 +187,14 @@ class UnitreeG1RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         # 中文说明：lin_vel_x 是前后速度，lin_vel_y 是侧向速度，ang_vel_z 是旋转速度。
         # 初次改跑步建议只扩大 lin_vel_x，减少同时改变的变量。
         # ------------------------------Commands------------------------------
-        self.commands.base_velocity.ranges.lin_vel_x = (-1.0, 1.0)
-        self.commands.base_velocity.ranges.lin_vel_y = (-1.0, 1.0)
-        self.commands.base_velocity.ranges.ang_vel_z = (-1.0, 1.0)
+        
+        # self.commands.base_velocity.ranges.lin_vel_x = (-1.0, 1.0)
+        # self.commands.base_velocity.ranges.lin_vel_y = (-1.0, 1.0)
+        # self.commands.base_velocity.ranges.ang_vel_z = (-1.0, 1.0)
+        
+        # 第一阶段只训练低速前进，降低任务难度
+        self.commands.base_velocity.ranges.lin_vel_x = (-0.8, 0.8)
+        # 暂时关闭横向移动
+        self.commands.base_velocity.ranges.lin_vel_y = (-0.3, 0.3)
+        # 暂时只允许很小的旋转速度
+        self.commands.base_velocity.ranges.ang_vel_z = (-0.3, 0.3)
