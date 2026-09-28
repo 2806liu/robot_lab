@@ -43,3 +43,19 @@ class UnitreeG1FlatPPORunnerCfg(UnitreeG1RoughPPORunnerCfg):
 
         self.max_iterations = 1500
         self.experiment_name = "unitree_g1_flat"
+
+
+@configclass
+class UnitreeG1FlatPpoStableV1RunnerCfg(UnitreeG1FlatPPORunnerCfg):
+    """Isolated PPO-stability experiment for the Unitree G1 flat task."""
+
+    def __post_init__(self):
+        super().__post_init__()
+
+        # Keep the environment and network architecture identical to the flat
+        # baseline; this experiment changes only PPO exploration/optimization.
+        self.experiment_name = "unitree_g1_flat_ppo_stable_v1"
+        self.policy.init_noise_std = 0.5
+        self.algorithm.entropy_coef = 0.005
+        self.algorithm.learning_rate = 3.0e-4
+        self.algorithm.schedule = "fixed"
