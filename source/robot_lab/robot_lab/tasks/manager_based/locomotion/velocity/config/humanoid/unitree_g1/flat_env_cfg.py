@@ -41,6 +41,20 @@ class UnitreeG1FlatEnvCfg(UnitreeG1RoughEnvCfg):
         self.rewards.joint_torques_l2.weight = -2.0e-6
         self.rewards.joint_torques_l2.params["asset_cfg"].joint_names = [".*_hip_.*", ".*_knee_joint"]
 
+        # Treat pelvis/torso ground contacts as failures in the flat locomotion task.
+        # A small force is penalized first; a larger force terminates the episode.
+        self.rewards.undesired_contacts.weight = -1.0
+        self.rewards.undesired_contacts.params["sensor_cfg"].body_names = [
+            "torso_link",
+            "pelvis_contour_link",
+        ]
+        self.rewards.undesired_contacts.params["threshold"] = 0.1
+        self.terminations.illegal_contact.params["sensor_cfg"].body_names = [
+            "torso_link",
+            "pelvis_contour_link",
+        ]
+        self.terminations.illegal_contact.params["threshold"] = 1.0
+
         # If the weight of rewards is 0, set rewards to None
         if self.__class__.__name__ == "UnitreeG1FlatEnvCfg":
             self.disable_zero_weight_rewards()
