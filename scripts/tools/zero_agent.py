@@ -80,6 +80,12 @@ def main():
         env_cfg.commands.base_velocity.rel_standing_envs = 1.0
         env_cfg.commands.base_velocity.rel_heading_envs = 0.0
         for event_name in (
+            # Startup randomization: keep nominal asset dynamics for this diagnostic.
+            "randomize_rigid_body_material",
+            "randomize_rigid_body_mass_base",
+            "randomize_rigid_body_mass_others",
+            "randomize_com_positions",
+            # Reset/interval randomization: do not perturb the rollout.
             "randomize_apply_external_force_torque",
             "randomize_reset_joints",
             "randomize_actuator_gains",
@@ -91,7 +97,7 @@ def main():
         if hasattr(env_cfg, "curriculum"):
             env_cfg.curriculum.command_levels_lin_vel = None
             env_cfg.curriculum.command_levels_ang_vel = None
-        print("[INFO]: Pure-stand diagnostic enabled: zero commands and reset/interval randomization disabled.")
+        print("[INFO]: Pure-stand diagnostic enabled: zero commands and all configured randomization disabled.")
     # create environment; RGB rendering is required by RecordVideo.
     render_mode = "rgb_array" if args_cli.video else None
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode=render_mode)
