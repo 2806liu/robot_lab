@@ -29,6 +29,11 @@ parser.add_argument("--num_steps", type=int, default=1000, help="Number of simul
 parser.add_argument("--video", action="store_true", help="Record a video from the zero-action rollout.")
 parser.add_argument("--video_length", type=int, default=500, help="Number of frames to record.")
 parser.add_argument(
+    "--pure_stand",
+    action="store_true",
+    help="Disable reset/interval randomization and set all velocity commands to zero.",
+)
+parser.add_argument(
     "--video_folder",
     type=str,
     default=None,
@@ -65,6 +70,28 @@ def main():
         num_envs=args_cli.num_envs,
         use_fabric=not args_cli.disable_fabric,
     )
+
+    if args_cli.pure_stand:
+        # Isolate default-pose and PD stability from task randomization.
+        env_cfg.commands.base_velocity.ranges.lin_vel_x = (0.0, 0.0)
+        env_cfg.commands.base_velocity.ranges.lin_vel_y = (0.0, 0.0)
+        env_cfg.commands.base_velocity.ranges.ang_vel_z = (0.0, 0.0)
+        env_cfg.commands.base_velocity.ranges.heading = (0.0, 0.0)
+        env_cfg.commands.base_velocity.rel_standing_envs = 1.0
+        env_cfg.commands.base_velocity.rel_heading_envs = 0.0
+        for event_name in (
+            "randomize_apply_external_force_torque",
+            "randomize_reset_joints",
+            "randomize_actuator_gains",
+            "randomize_reset_base",
+            "randomize_push_robot",
+        ):
+            if hasattr(env_cfg.events, event_name):
+                setattr(env_cfg.events, event_name, None)
+        if hasattr(env_cfg, "curriculum"):
+            env_cfg.curriculum.command_levels_lin_vel = None
+            env_cfg.curriculum.command_levels_ang_vel = None
+        print("[INFO]: Pure-stand diagnostic enabled: zero commands and reset/interval randomization disabled.")
     # create environment; RGB rendering is required by RecordVideo.
     render_mode = "rgb_array" if args_cli.video else None
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode=render_mode)
