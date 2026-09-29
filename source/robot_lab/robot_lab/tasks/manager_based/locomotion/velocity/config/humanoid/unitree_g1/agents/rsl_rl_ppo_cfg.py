@@ -59,3 +59,14 @@ class UnitreeG1FlatPpoStableV1RunnerCfg(UnitreeG1FlatPPORunnerCfg):
         self.algorithm.entropy_coef = 0.005
         self.algorithm.learning_rate = 3.0e-4
         self.algorithm.schedule = "fixed"
+
+
+@configclass
+class UnitreeG1FlatPpoStableV2RunnerCfg(UnitreeG1FlatPpoStableV1RunnerCfg):
+    """PPO stability experiment with reduced entropy regularization."""
+
+    def __post_init__(self):
+        super().__post_init__()
+
+        self.experiment_name = "unitree_g1_flat_ppo_stable_v2_entropy002"
+        self.algorithm.entropy_coef = 0.002

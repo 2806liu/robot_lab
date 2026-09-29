@@ -31,6 +31,9 @@ gym.register(
         "rsl_rl_ppo_stable_v1_cfg_entry_point": (
             f"{agents.__name__}.rsl_rl_ppo_cfg:UnitreeG1FlatPpoStableV1RunnerCfg"
         ),
+        "rsl_rl_ppo_stable_v2_cfg_entry_point": (
+            f"{agents.__name__}.rsl_rl_ppo_cfg:UnitreeG1FlatPpoStableV2RunnerCfg"
+        ),
         "cusrl_cfg_entry_point": f"{agents.__name__}.cusrl_ppo_cfg:UnitreeG1FlatTrainerCfg",
     },
 )
