@@ -46,12 +46,12 @@ class UnitreeG1FlatEnvCfg(UnitreeG1RoughEnvCfg):
         self.rewards.undesired_contacts.weight = -1.0
         self.rewards.undesired_contacts.params["sensor_cfg"].body_names = [
             "torso_link",
-            "pelvis_contour_link",
+            "pelvis",
         ]
         self.rewards.undesired_contacts.params["threshold"] = 0.1
         self.terminations.illegal_contact.params["sensor_cfg"].body_names = [
             "torso_link",
-            "pelvis_contour_link",
+            "pelvis",
         ]
         self.terminations.illegal_contact.params["threshold"] = 1.0
 
